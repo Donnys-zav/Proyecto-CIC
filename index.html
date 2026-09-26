@@ -1,0 +1,727 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>CIC - Classroom in community</title>
+  <style>
+    :root {
+      --bg-dark: #0a1118;
+      --card-bg: #111d28;
+      --primary-green: #00e676;
+      --aqua-main: #00f2fe;
+      --aqua-dark: #4facfe;
+      --celeste-light: #89f7fe;
+      --text-white: #ffffff;
+      --text-muted: #a0aec0;
+      --ratio-width: 75%;
+      --font-size: 16px;
+    }
+
+    /* TEMA CLARO DINÁMICO */
+    body.light-theme {
+      --bg-dark: #f0f4f8;
+      --card-bg: #ffffff;
+      --text-white: #1a202c;
+      --text-muted: #4a5568;
+    }
+
+    * { box-sizing: border-box; margin: 0; padding: 0; font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; transition: background-color 0.3s, color 0.3s; }
+    html { font-size: var(--font-size); }
+    body { background-color: var(--bg-dark); color: var(--text-white); min-height: 100vh; display: flex; flex-direction: column; overflow-x: hidden; }
+
+    /* PANTALLA DE CARGA */
+    #loading-screen {
+      position: fixed; top: 0; left: 0; width: 100%; height: 100%;
+      background-color: var(--bg-dark); z-index: 9999;
+      display: flex; flex-direction: column; justify-content: center; align-items: center;
+      transition: opacity 0.4s ease;
+    }
+    .loader-ring {
+      width: 65px; height: 65px; border: 4px solid rgba(0, 242, 254, 0.1);
+      border-top: 4px solid var(--aqua-main); border-right: 4px solid var(--primary-green);
+      border-radius: 50%; animation: spin 0.8s linear infinite; margin-bottom: 18px;
+    }
+    @keyframes spin { 0% { transform: rotate(0deg); } 100% { transform: rotate(360deg); } }
+
+    /* HEADER & NAVBAR */
+    header {
+      background: rgba(17, 29, 40, 0.95); backdrop-filter: blur(10px);
+      position: sticky; top: 0; z-index: 1000;
+      border-bottom: 1px solid rgba(0, 242, 254, 0.15);
+      padding: 12px 24px; display: flex; align-items: center; justify-content: space-between; gap: 15px;
+    }
+    body.light-theme header { background: rgba(255, 255, 255, 0.95); border-bottom: 1px solid rgba(0, 229, 255, 0.3); }
+
+    .brand-logo { display: flex; align-items: center; gap: 12px; cursor: pointer; text-decoration: none; }
+    .brand-title {
+      font-size: 1.25rem; font-weight: 800;
+      background: linear-gradient(135deg, var(--aqua-main), var(--primary-green));
+      -webkit-background-clip: text; -webkit-text-fill-color: transparent;
+    }
+    .search-container { flex: 1; max-width: 500px; position: relative; }
+    .search-input {
+      width: 100%; padding: 10px 16px 10px 42px; background: rgba(255, 255, 255, 0.06);
+      border: 1px solid rgba(0, 242, 254, 0.2); border-radius: 25px; color: var(--text-white); font-size: 0.95rem; outline: none;
+    }
+    body.light-theme .search-input { background: rgba(0, 0, 0, 0.05); }
+    .search-input:focus { border-color: var(--aqua-main); box-shadow: 0 0 10px rgba(0, 242, 254, 0.3); }
+    .search-icon { position: absolute; left: 14px; top: 50%; transform: translateY(-50%); width: 18px; height: 18px; fill: var(--text-muted); }
+    
+    .btn-icon { background: rgba(255, 255, 255, 0.05); border: 1px solid rgba(0, 242, 254, 0.2); border-radius: 50%; width: 42px; height: 42px; display: flex; align-items: center; justify-content: center; cursor: pointer; }
+    .btn-icon:hover { background: rgba(0, 242, 254, 0.15); }
+    .btn-icon svg { width: 20px; height: 20px; fill: var(--celeste-light); }
+    body.light-theme .btn-icon svg { fill: var(--aqua-dark); }
+
+    /* HERO */
+    .hero { text-align: center; padding: 40px 20px 20px; }
+    .hero h1 { font-size: 2.8rem; background: linear-gradient(135deg, var(--celeste-light), var(--primary-green)); -webkit-background-clip: text; -webkit-text-fill-color: transparent; }
+    body.light-theme .hero h1 { background: linear-gradient(135deg, var(--aqua-dark), var(--primary-green)); -webkit-background-clip: text; -webkit-text-fill-color: transparent; }
+
+    /* SECUENCIAS / MÓDULOS */
+    .main-container { max-width: 1100px; margin: 0 auto; padding: 20px; display: flex; flex-direction: column; gap: 35px; width: 100%; flex: 1; }
+    .row-block { display: flex; width: 100%; height: 260px; border-radius: 16px; overflow: hidden; background: var(--card-bg); border: 1px solid rgba(0, 242, 254, 0.12); box-shadow: 0 4px 15px rgba(0,0,0,0.2); }
+    .col-text { flex: 0 0 var(--ratio-width); padding: 28px; display: flex; flex-direction: column; justify-content: center; overflow-y: auto; }
+    .col-text h2 { color: var(--aqua-main); margin-bottom: 10px; font-size: 1.35rem; }
+    body.light-theme .col-text h2 { color: #007791; }
+    .col-text p { color: var(--text-muted); line-height: 1.5; font-size: 0.95rem; }
+    .col-img { flex: 1; position: relative; overflow: hidden; }
+    .col-img img { width: 100%; height: 100%; object-fit: cover; }
+
+    /* HIGHLIGHT EN SEARCH */
+    .search-matched { border: 2px solid var(--primary-green) !important; box-shadow: 0 0 15px rgba(0, 230, 118, 0.4) !important; }
+
+    /* DINAMISMO RESALTADO (MÓDULOS 2 Y 3) */
+    .highlight-interactive { cursor: pointer; border: 2px solid var(--aqua-main); box-shadow: 0 0 20px rgba(0, 242, 254, 0.25); }
+    .highlight-interactive img { animation: pulseZoom 4s infinite alternate; }
+    @keyframes pulseZoom { 0% { transform: scale(1); } 100% { transform: scale(1.08); } }
+    .badge-click {
+      position: absolute; bottom: 12px; right: 12px; background: rgba(10, 17, 24, 0.85);
+      border: 1px solid var(--primary-green); color: var(--primary-green); padding: 5px 12px;
+      border-radius: 20px; font-size: 0.75rem; font-weight: 700;
+    }
+
+    /* MODALES DE SUBPÁGINAS Y CONFIGURACIÓN */
+    .modal-overlay {
+      position: fixed; top: 0; left: 0; width: 100%; height: 100%;
+      background: rgba(10, 17, 24, 0.85); backdrop-filter: blur(8px);
+      z-index: 2000; display: none; justify-content: center; align-items: center; padding: 20px;
+    }
+    .modal-content {
+      background: var(--card-bg); border: 1px solid var(--aqua-main); border-radius: 16px;
+      width: 100%; max-width: 650px; max-height: 85vh; overflow-y: auto; padding: 25px; position: relative;
+    }
+    .close-btn { position: absolute; top: 15px; right: 15px; background: none; border: none; color: var(--text-muted); font-size: 1.5rem; cursor: pointer; }
+
+    /* ESTILOS DEL MÓDULO 2 (3 APARTADOS Y ENLACES) */
+    .resource-section {
+      background: rgba(255,255,255,0.03);
+      border: 1px solid rgba(0,242,254,0.15);
+      border-radius: 12px;
+      padding: 16px;
+      margin-bottom: 18px;
+    }
+    .resource-section-title {
+      color: var(--primary-green);
+      font-size: 1rem;
+      font-weight: 700;
+      margin-bottom: 10px;
+      display: flex;
+      align-items: center;
+      gap: 8px;
+      border-bottom: 1px solid rgba(0, 230, 118, 0.2);
+      padding-bottom: 6px;
+    }
+    .links-grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+      gap: 10px;
+    }
+    .manual-link-btn {
+      display: inline-flex;
+      align-items: center;
+      justify-content: space-between;
+      padding: 10px 14px;
+      background: rgba(0, 242, 254, 0.06);
+      border: 1px solid rgba(0, 242, 254, 0.25);
+      border-radius: 8px;
+      color: var(--celeste-light);
+      text-decoration: none;
+      font-size: 0.85rem;
+      font-weight: 600;
+      transition: all 0.2s ease;
+    }
+    .manual-link-btn:hover {
+      background: rgba(0, 242, 254, 0.18);
+      border-color: var(--primary-green);
+      color: var(--primary-green);
+      transform: translateY(-2px);
+    }
+
+    /* OPCIONES DE CONFIGURACIÓN */
+    .config-group { margin-bottom: 20px; }
+    .config-group h4 { color: var(--celeste-light); margin-bottom: 8px; font-size: 1rem; }
+    body.light-theme .config-group h4 { color: var(--aqua-dark); }
+    .config-options { display: flex; gap: 10px; flex-wrap: wrap; }
+    .config-btn { padding: 8px 16px; background: rgba(255,255,255,0.05); border: 1px solid rgba(0,242,254,0.3); border-radius: 8px; color: var(--text-white); cursor: pointer; font-size: 0.85rem; }
+    .config-btn.active { background: var(--aqua-main); color: #000; font-weight: bold; }
+
+    /* ESTILOS DE LA ENCUESTA MODAL 3 */
+    .survey-question {
+      background: rgba(255,255,255,0.03);
+      border: 1px solid rgba(0,242,254,0.1);
+      border-radius: 10px;
+      padding: 12px;
+      margin-bottom: 12px;
+    }
+    .survey-question p {
+      font-size: 0.9rem;
+      margin-bottom: 8px;
+      color: var(--text-white);
+    }
+    .survey-options {
+      display: flex;
+      gap: 15px;
+    }
+    .survey-options label {
+      display: flex;
+      align-items: center;
+      gap: 6px;
+      font-size: 0.85rem;
+      cursor: pointer;
+      color: var(--text-muted);
+    }
+    .survey-section-title {
+      color: var(--primary-green);
+      font-size: 0.95rem;
+      margin: 15px 0 10px 0;
+      border-bottom: 1px solid rgba(0,230,118,0.2);
+      padding-bottom: 4px;
+    }
+
+    /* TARJETA DE RESULTADO DE DIAGNÓSTICO */
+    .result-card {
+      background: rgba(0,242,254,0.05);
+      border: 2px solid var(--primary-green);
+      border-radius: 12px;
+      padding: 20px;
+      margin-top: 15px;
+    }
+    .result-title {
+      font-size: 1.2rem;
+      color: var(--primary-green);
+      font-weight: 800;
+      margin-bottom: 8px;
+    }
+    .result-tag {
+      display: inline-block;
+      background: linear-gradient(135deg, var(--aqua-main), var(--primary-green));
+      color: #000;
+      font-weight: 800;
+      padding: 6px 14px;
+      border-radius: 20px;
+      font-size: 0.9rem;
+      margin-bottom: 12px;
+    }
+
+    /* FOOTER / CRÉDITOS */
+    footer {
+      background: rgba(17, 29, 40, 0.95);
+      border-top: 1px solid rgba(0, 242, 254, 0.15);
+      padding: 25px 20px; text-align: center; margin-top: 40px;
+    }
+    body.light-theme footer { background: #e2e8f0; }
+    .credits-title { font-size: 0.9rem; color: var(--aqua-main); text-transform: uppercase; letter-spacing: 1px; margin-bottom: 8px; }
+    .credits-names { font-size: 0.95rem; color: var(--text-muted); margin-bottom: 15px; }
+    .social-links { display: flex; justify-content: center; gap: 15px; flex-wrap: wrap; }
+    .social-link {
+      color: var(--celeste-light); text-decoration: none; font-size: 0.85rem; padding: 6px 14px;
+      border: 1px solid rgba(0,242,254,0.3); border-radius: 20px; background: rgba(255,255,255,0.03);
+    }
+    .social-link:hover { border-color: var(--primary-green); color: var(--primary-green); }
+
+    @media (max-width: 768px) {
+      .row-block { flex-direction: column; height: auto; }
+      .col-text, .col-img { flex: 1 1 100%; }
+      .col-img { height: 180px; }
+      .row-block.invert { flex-direction: column; }
+    }
+  </style>
+</head>
+<body>
+
+  <!-- Pantalla de Carga -->
+  <div id="loading-screen">
+    <div class="loader-ring"></div>
+    <p style="color: var(--celeste-light); font-weight: 600;">Cargando CIC...</p>
+  </div>
+
+  <!-- Header -->
+  <header>
+    <a class="brand-logo" onclick="location.reload()">
+      <svg width="32" height="32" viewBox="0 0 100 100">
+        <rect x="38" y="38" width="24" height="24" fill="#00e676" />
+        <polygon points="50,20 80,50 50,80 20,50" fill="none" stroke="#00f2fe" stroke-width="4" />
+        <path d="M 50,5 A 45,45 0 0,1 95,50" fill="none" stroke="#89f7fe" stroke-width="6" stroke-linecap="round" />
+      </svg>
+      <span class="brand-title">CIC</span>
+    </a>
+    <div class="search-container">
+      <svg class="search-icon" viewBox="0 0 24 24"><path d="M15.5 14h-.79l-.28-.27C15.41 12.59 16 11.11 16 9.5 16 5.91 13.09 3 9.5 3S3 5.91 3 9.5 5.91 16 9.5 16c1.61 0 3.09-.59 4.23-1.57l.27.28v.79l5 4.99L20.49 19l-4.99-5zm-6 0C7.01 14 5 11.99 5 9.5S7.01 5 9.5 5 14 7.01 14 9.5 11.99 14 9.5 14z"/></svg>
+      <input type="text" id="search-bar" class="search-input" placeholder="Buscar en la página web (módulos, temas)..." oninput="liveSearch()">
+    </div>
+    <button class="btn-icon" onclick="toggleModal('modal-config')">
+      <svg viewBox="0 0 24 24"><path d="M19.14 12.94c.04-.3.06-.61.06-.94 0-.32-.02-.64-.07-.94l2.03-1.58c.18-.14.23-.41.12-.61l-1.92-3.32c-.12-.22-.37-.29-.59-.22l-2.39.96c-.5-.38-1.03-.7-1.62-.94l-.36-2.54c-.04-.24-.24-.41-.48-.41h-3.84c-.24 0-.43.17-.47.41l-.36 2.54c-.59.24-1.13.57-1.62.94l-2.39-.96c-.22-.08-.47 0-.59.22L2.74 8.87c-.12.21-.08.47.12.61l2.03 1.58c-.05.3-.09.63-.09.94s.02.64.07.94l-2.03 1.58c-.18.14-.23.41-.12.61l1.92 3.32c.12.22.37.29.59.22l2.39-.96c.5.38 1.03.7 1.62.94l.36 2.54c.05.24.24.41.48.41h3.84c.24 0 .44-.17.47-.41l.36-2.54c.59-.24 1.13-.56 1.62-.94l2.39.96c.22.08.47 0 .59-.22l1.92-3.32c.12-.22.07-.47-.12-.61l-2.01-1.58zM12 15.6c-1.98 0-3.6-1.62-3.6-3.6s1.62-3.6 3.6-3.6 3.6 1.62 3.6 3.6-1.62 3.6-3.6 3.6z"/></svg>
+    </button>
+  </header>
+
+  <!-- Hero -->
+  <section class="hero">
+    <h1>Bienvenidos</h1>
+    <p style="color: var(--text-muted); margin-top: 8px;">Plataforma estudiantil colaborativa de aprendizaje dinámico y fraternal</p>
+  </section>
+
+  <!-- Main Content Sequence -->
+  <main class="main-container">
+
+    <!-- Secuencia 1: Comunidad Estudiantil (Texto 75% -> Imagen 25%) -->
+    <div class="row-block" id="module-1">
+      <div class="col-text">
+        <h2>Módulo 1: Comunidad Estudiantil y Familiar</h2>
+        <p>Somos un grupo estudiantil comprometido con la creación de una comunidad cálida, unida y familiar. Creemos firmemente que el aprendizaje no tiene por qué ser aburrido; redescubrimos lo atractivo e inspirador del estudio mediante la colaboración mutua, el apoyo académico continuo y la pasión por aprender juntos.</p>
+      </div>
+      <div class="col-img">
+        <img src="https://images.unsplash.com/photo-1529156069898-49953e39b3ac?w=500" alt="Comunidad Estudiantil">
+      </div>
+    </div>
+
+    <!-- Secuencia 2: Material Digital (Imagen 25% -> Texto 75%) [Resaltada y Dinámica] -->
+    <div class="row-block invert" id="module-2">
+      <div class="col-img highlight-interactive" onclick="navigateWithLoading('modal-subpage-2')">
+        <img src="https://images.unsplash.com/photo-1456513080510-7bf3a84b82f8?w=500" alt="Material Digital">
+        <span class="badge-click">Ver Recursos Digitales</span>
+      </div>
+      <div class="col-text">
+        <h2>Módulo 2: Material digital</h2>
+        <p>Contar con un material estudiantil estructurado y actualizado es fundamental para consolidar el aprendizaje autónomo. Al hacer clic en la imagen interactiva, accederás a la biblioteca dividida en 3 secciones: bibliotecas de secundaria, de preuniversitarios y formularios/resúmenes.</p>
+      </div>
+    </div>
+
+    <!-- Secuencia 3: Guía Estudiantil (Texto 75% -> Imagen 25%) [Resaltada y Dinámica] -->
+    <div class="row-block" id="module-3">
+      <div class="col-text">
+        <h2>Módulo 3: Guía Estudiantil</h2>
+        <p>Cada estudiante posee un ritmo y una forma de procesar el conocimiento completamente única. Al hacer clic en la imagen interactiva, podrás completar nuestro Cuestionario de Perfil y Orientación de Aprendizaje (10 preguntas). Al finalizar, obtendrás un diagnóstico personalizado sobre tu perfil académico y estilo de estudio óptimo.</p>
+      </div>
+      <div class="col-img highlight-interactive" onclick="navigateWithLoading('modal-subpage-3')">
+        <img src="https://images.unsplash.com/photo-1522202176988-66273c2fd55f?w=500" alt="Guía Estudiantil">
+        <span class="badge-click">Iniciar Cuestionario</span>
+      </div>
+    </div>
+
+  </main>
+
+  <!-- Subpágina Modal Módulo 2: Ventana Emergente con 3 Apartados -->
+  <div id="modal-subpage-2" class="modal-overlay">
+    <div class="modal-content">
+      <button class="close-btn" onclick="toggleModal('modal-subpage-2')">&times;</button>
+      <h2 style="color: var(--aqua-main); margin-bottom: 8px;">Recursos y Material Digital</h2>
+      <p style="color: var(--text-muted); font-size: 0.85rem; margin-bottom: 20px;">Accede a las colecciones de estudio organizadas por nivel académico y tipo de contenido.</p>
+      
+      <!-- APARTADO 1: Bibliotecas Generales (Nivel Secundaria) - 4 Enlaces -->
+      <div class="resource-section">
+        <div class="resource-section-title">
+          <span>📚 1. Bibliotecas Generales (Nivel Secundaria)</span>
+        </div>
+        <div class="links-grid">
+          <a href="https://bibliotecadigital.catolica.edu.sv/accesoabierto?hl=es-ES" target="_blank" class="manual-link-btn">
+            <span>Bibl. Catolica</span> 🔗
+          </a>
+          <a href="https://www.bibliotecalospinos.eu/biblioteca/?hl=es-ES" target="_blank" class="manual-link-btn">
+            <span>Bibl. Los Pinos</span> 🔗
+          </a>
+          <a href="https://www.ijamvirtual.edu.pe/biblioteca?hl=es-ES" target="_blank" class="manual-link-btn">
+            <span>Bibl. IJAM</span> 🔗
+          </a>
+          <a href="https://es.wikipedia.org/wiki/Wikipedia:Portada" target="_blank" class="manual-link-btn">
+            <span>Wikipedia</span> 🔗
+          </a>
+        </div>
+      </div>
+
+      <!-- APARTADO 2: Bibliotecas Privadas (Nivel Preuniversitario) - 3 Enlaces -->
+      <div class="resource-section">
+        <div class="resource-section-title">
+          <span>🎓 2. Bibliotecas Privadas (Nivel Preuniversitario)</span>
+        </div>
+        <div class="links-grid">
+          <a href="https://linktr.ee/meditrux" target="_blank" class="manual-link-btn">
+            <span>MEDITRUX</span> 🔗
+          </a>
+          <a href="https://drive.google.com/drive/folders/1hzDNp244Ol8nsrujIQZj5MPW8G9-f1Z_" target="_blank" class="manual-link-btn">
+            <span>MODO INGRESO</span> 🔗
+          </a>
+          <a href="https://universetostudy.com/biblioteca/lumbreras/" target="_blank" class="manual-link-btn">
+            <span>UNIVERSE</span> 🔗
+          </a>
+        </div>
+      </div>
+
+      <!-- APARTADO 3: Formularios y Resúmenes - 2 Enlaces -->
+      <div class="resource-section" style="margin-bottom: 0;">
+        <div class="resource-section-title">
+          <span>📝 3. Formularios y Resúmenes</span>
+        </div>
+        <div class="links-grid">
+          <a href="https://drive.google.com/drive/folders/1bEybkCjGXSpTbiNq5kJsdzIofABt8km_" target="_blank" class="manual-link-btn">
+            <span>Form. Números</span> 🔗
+          </a>
+          <a href="https://drive.google.com/drive/folders/1uB_nN-NjY76GK4247oqt4GLV0aB-G0s7?usp=drive_link" target="_blank" class="manual-link-btn">
+            <span>Res. Letras</span> 🔗
+          </a>
+        </div>
+      </div>
+
+    </div>
+  </div>
+
+  <!-- Subpágina Modal Módulo 3: Cuestionario de Perfil y Orientación (10 Preguntas) -->
+  <div id="modal-subpage-3" class="modal-overlay">
+    <div class="modal-content">
+      <button class="close-btn" onclick="toggleModal('modal-subpage-3')">&times;</button>
+      <h2 style="color: var(--aqua-main); margin-bottom: 8px;">Cuestionario de Perfil y Orientación de Aprendizaje</h2>
+      <p style="color: var(--text-muted); font-size: 0.85rem; margin-bottom: 15px;">Responde <strong>SÍ</strong> o <strong>NO</strong> a cada afirmación para calcular tu diagnóstico personalizado.</p>
+      
+      <form id="survey-form" onsubmit="calculateDiagnosis(event)">
+        
+        <div class="survey-section-title">Sección A: Autonomía y Ritmo (Versión Flexibilizada)</div>
+
+        <div class="survey-question">
+          <p>1. ¿Sueles captar los conceptos complejos al primer intento y sin necesitar explicaciones adicionales?</p>
+          <div class="survey-options">
+            <label><input type="radio" name="q1" value="SI" required> SÍ</label>
+            <label><input type="radio" name="q1" value="NO"> NO</label>
+          </div>
+        </div>
+
+        <div class="survey-question">
+          <p>2. ¿Avanzas al ritmo habitual de la clase cuando la explicación es clara y se incluye práctica?</p>
+          <div class="survey-options">
+            <label><input type="radio" name="q2" value="SI" required> SÍ</label>
+            <label><input type="radio" name="q2" value="NO"> NO</label>
+          </div>
+        </div>
+
+        <div class="survey-question">
+          <p>3. ¿Tiendes a posponer el estudio o las entregas a menos que haya una fecha límite o supervisión directa?</p>
+          <div class="survey-options">
+            <label><input type="radio" name="q3" value="SI" required> SÍ</label>
+            <label><input type="radio" name="q3" value="NO"> NO</label>
+          </div>
+        </div>
+
+        <div class="survey-question">
+          <p>4. ¿Necesitas un seguimiento externo (profesores/padres) para mantener la constancia en tus deberes?</p>
+          <div class="survey-options">
+            <label><input type="radio" name="q4" value="SI" required> SÍ</label>
+            <label><input type="radio" name="q4" value="NO"> NO</label>
+          </div>
+        </div>
+
+        <div class="survey-question">
+          <p>5. ¿Procesas mejor la información cuando te la explican paso a paso o con apoyos personalizados?</p>
+          <div class="survey-options">
+            <label><input type="radio" name="q5" value="SI" required> SÍ</label>
+            <label><input type="radio" name="q5" value="NO"> NO</label>
+          </div>
+        </div>
+
+        <div class="survey-question">
+          <p>6. ¿Tomas la iniciativa para organizar tus horarios y buscar soluciones cuando no entiendes algo?</p>
+          <div class="survey-options">
+            <label><input type="radio" name="q6" value="SI" required> SÍ</label>
+            <label><input type="radio" name="q6" value="NO"> NO</label>
+          </div>
+        </div>
+
+        <div class="survey-section-title">Sección B: Orientación Académica</div>
+
+        <div class="survey-question">
+          <p>7. ¿Te resulta más sencillo aprender mediante lecturas, redacción de textos o debates?</p>
+          <div class="survey-options">
+            <label><input type="radio" name="q7" value="SI" required> SÍ</label>
+            <label><input type="radio" name="q7" value="NO"> NO</label>
+          </div>
+        </div>
+
+        <div class="survey-question">
+          <p>8. ¿Prefieres resolver operaciones, ejercicios de lógica o problemas matemáticos antes que escribir ensayos?</p>
+          <div class="survey-options">
+            <label><input type="radio" name="q8" value="SI" required> SÍ</label>
+            <label><input type="radio" name="q8" value="NO"> NO</label>
+          </div>
+        </div>
+
+        <div class="survey-question">
+          <p>9. ¿Te sientes más cómodo memorizando conceptos teóricos, analizando obras o argumentando tus ideas?</p>
+          <div class="survey-options">
+            <label><input type="radio" name="q9" value="SI" required> SÍ</label>
+            <label><input type="radio" name="q9" value="NO"> NO</label>
+          </div>
+        </div>
+
+        <div class="survey-question">
+          <p>10. ¿Te motiva encontrar la solución exacta a un ejercicio numérico aplicando fórmulas o ecuaciones?</p>
+          <div class="survey-options">
+            <label><input type="radio" name="q10" value="SI" required> SÍ</label>
+            <label><input type="radio" name="q10" value="NO"> NO</label>
+          </div>
+        </div>
+
+        <button type="submit" style="width: 100%; padding: 12px; background: linear-gradient(135deg, var(--aqua-main), var(--primary-green)); border: none; border-radius: 8px; font-weight: bold; color: #000; cursor: pointer; margin-top: 10px;">
+          Obtener Resultado y Diagnóstico
+        </button>
+      </form>
+
+      <!-- Div de Resultado -->
+      <div id="survey-result" style="display: none;">
+        <div class="result-card">
+          <div class="result-title">Diagnóstico Final Obtenido</div>
+          <div class="result-tag" id="res-tag">Resultado...</div>
+          
+          <div style="font-size: 0.8rem; color: var(--text-muted); margin-bottom: 12px; background: rgba(0,0,0,0.2); padding: 8px; border-radius: 6px;">
+            Índices calculados: <strong style="color:var(--aqua-main);" id="res-ia-val">IA: 0/3</strong> | <strong style="color:var(--primary-green);" id="res-ir-val">IR: 0/2.5</strong>
+          </div>
+
+          <h4 style="color: var(--celeste-light); margin-bottom: 4px; font-size: 0.95rem;">Perfil de Aprendizaje: <span id="res-learning-title" style="color: var(--primary-green);"></span></h4>
+          <p id="res-learning-desc" style="font-size: 0.85rem; color: var(--text-muted); margin-bottom: 10px;"></p>
+          <p style="font-size: 0.85rem; color: var(--aqua-main); margin-bottom: 15px;"><strong>Enfoque recomendado:</strong> <span id="res-learning-approach" style="color: var(--text-white);"></span></p>
+
+          <h4 style="color: var(--celeste-light); margin-bottom: 4px; font-size: 0.95rem;">Orientación Académica: <span id="res-orientation-title" style="color: var(--primary-green);"></span></h4>
+          <p id="res-orientation-desc" style="font-size: 0.85rem; color: var(--text-muted); margin-bottom: 15px;"></p>
+
+          <button onclick="resetSurvey()" style="width: 100%; padding: 10px; background: rgba(255,255,255,0.1); border: 1px solid var(--aqua-main); border-radius: 8px; color: var(--text-white); cursor: pointer; font-size: 0.85rem;">
+            Volver a realizar el cuestionario
+          </button>
+        </div>
+      </div>
+
+    </div>
+  </div>
+
+  <!-- Modal de Configuración -->
+  <div id="modal-config" class="modal-overlay">
+    <div class="modal-content">
+      <button class="close-btn" onclick="toggleModal('modal-config')">&times;</button>
+      <h2 style="color: var(--aqua-main); margin-bottom: 15px;">Configuraciones de la Plataforma</h2>
+      
+      <div class="config-group">
+        <h4>Tema Visual</h4>
+        <div class="config-options">
+          <button class="config-btn active" id="btn-theme-dark" onclick="setTheme('dark')">Modo Oscuro</button>
+          <button class="config-btn" id="btn-theme-light" onclick="setTheme('light')">Modo Claro</button>
+        </div>
+      </div>
+
+      <div class="config-group">
+        <h4>Tamaño de Fuente</h4>
+        <div class="config-options">
+          <button class="config-btn" onclick="setFontSize('14px')">Pequeño</button>
+          <button class="config-btn active" id="btn-font-med" onclick="setFontSize('16px')">Normal</button>
+          <button class="config-btn" onclick="setFontSize('18px')">Grande</button>
+        </div>
+      </div>
+
+      <div class="config-group">
+        <h4>Idioma</h4>
+        <div class="config-options">
+          <button class="config-btn active">Español</button>
+          <button class="config-btn" onclick="alert('Idioma seleccionado: Español (Predeterminado)')">English (PR)</button>
+        </div>
+      </div>
+
+      <div class="config-group">
+        <h4>Efectos Dinámicos</h4>
+        <div class="config-options">
+          <button class="config-btn active" onclick="alert('Animaciones activadas')">Animaciones Activas</button>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Footer y Créditos -->
+  <footer>
+    <div class="credits-title">Desarrollado por el Grupo Estudiantil</div>
+    <div class="credits-names">
+      Rodrigo Valverde • Donny Zavaleta • Yamil Rodríguez • Sayuri Gonzales • Keira Rios
+    </div>
+    <div class="social-links">
+      <a href="https://chat.whatsapp.com/CZWPDgoPTF0L8va9GeAfv2" target="_blank" class="social-link">Grupo estudiantil (P)</a>
+      <a href="https://www.instagram.com/lapromo__2026?stkn=cXBydmkyc3R4cWRy" target="_blank" class="social-link">Instagram representativo</a>
+    </div>
+  </footer>
+
+  <script>
+    /* Control de Carga */
+    window.addEventListener('load', () => {
+      setTimeout(() => {
+        const loader = document.getElementById('loading-screen');
+        loader.style.opacity = '0';
+        setTimeout(() => loader.style.display = 'none', 400);
+      }, 500);
+    });
+
+    /* Funciones de Modales */
+    function toggleModal(id) {
+      const modal = document.getElementById(id);
+      modal.style.display = (modal.style.display === 'flex') ? 'none' : 'flex';
+    }
+
+    function navigateWithLoading(targetModalId) {
+      const loader = document.getElementById('loading-screen');
+      loader.style.display = 'flex';
+      loader.style.opacity = '1';
+      setTimeout(() => {
+        loader.style.opacity = '0';
+        setTimeout(() => {
+          loader.style.display = 'none';
+          toggleModal(targetModalId);
+        }, 300);
+      }, 600);
+    }
+
+    /* Búsqueda Interactiva */
+    function liveSearch() {
+      const query = document.getElementById('search-bar').value.toLowerCase().trim();
+      const blocks = document.querySelectorAll('.row-block');
+      
+      blocks.forEach(block => {
+        const text = block.innerText.toLowerCase();
+        if (query !== '' && text.includes(query)) {
+          block.classList.add('search-matched');
+        } else {
+          block.classList.remove('search-matched');
+        }
+      });
+    }
+
+    /* Opciones de Configuración */
+    function setTheme(mode) {
+      if(mode === 'light') {
+        document.body.classList.add('light-theme');
+        document.getElementById('btn-theme-light').classList.add('active');
+        document.getElementById('btn-theme-dark').classList.remove('active');
+      } else {
+        document.body.classList.remove('light-theme');
+        document.getElementById('btn-theme-dark').classList.add('active');
+        document.getElementById('btn-theme-light').classList.remove('active');
+      }
+    }
+
+    function setFontSize(size) {
+      document.documentElement.style.setProperty('--font-size', size);
+    }
+
+    /* SISTEMA DE DIAGNÓSTICO EVALUACIÓN MATRICIAL (IA e IR) */
+    function calculateDiagnosis(event) {
+      event.preventDefault();
+
+      const getVal = (qNum) => {
+        const el = document.querySelector(`input[name="q${qNum}"]:checked`);
+        return el ? el.value : 'NO';
+      };
+
+      const q1 = getVal(1);
+      const q2 = getVal(2);
+      const q3 = getVal(3);
+      const q4 = getVal(4);
+      const q5 = getVal(5);
+      const q6 = getVal(6);
+      const q7 = getVal(7);
+      const q8 = getVal(8);
+      const q9 = getVal(9);
+      const q10 = getVal(10);
+
+      /* 1. Cálculo del Índice de Autonomía (IA) */
+      let ia = 0;
+      if (q6 === 'SI') ia += 1;
+      if (q3 === 'NO') ia += 1;
+      if (q4 === 'NO') ia += 1;
+
+      /* 2. Cálculo del Índice de Ritmo (IR) */
+      let ir = 0;
+      if (q1 === 'SI') ir += 1;
+      if (q2 === 'SI') ir += 0.5;
+      if (q5 === 'NO') ir += 1;
+
+      /* Determinación de Niveles de Índice */
+      const isIaAlto = ia >= 2; // Alto: 2-3 | Bajo: 0-1
+      const isIrRapido = ir >= 1; // Rápido/Moderado: 1-2.5 | Pausado: 0-0.5
+
+      let perfilAprendizaje = "";
+      let descAprendizaje = "";
+      let enfoqueAprendizaje = "";
+
+      if (isIaAlto && isIrRapido) {
+        perfilAprendizaje = "Plenamente Autónomo";
+        descAprendizaje = "Gestiona su propio aprendizaje, avanza de forma independiente sin depender del ritmo del grupo y resuelve sus dudas por iniciativa propia.";
+        enfoqueAprendizaje = "Desafíos avanzados y proyectos de investigación.";
+      } else if (isIaAlto && !isIrRapido) {
+        perfilAprendizaje = "Persistente de Trabajo Independiente";
+        descAprendizaje = "Procesa la información a su propio ritmo sin frustrarse; es proactivo, busca material por su cuenta y no depende de supervisión directa.";
+        enfoqueAprendizaje = "Tiempos flexibles, recursos multimedia de autoestudio y guía en metodologías de síntesis.";
+      } else if (!isIaAlto && isIrRapido) {
+        perfilAprendizaje = "Estudiante con Necesidad de Estructura";
+        descAprendizaje = "Posee buena capacidad de comprensión (rápida o estándar), pero presenta dificultades de organización, disciplina o dependencia de supervisión externa para cumplir.";
+        enfoqueAprendizaje = "Rutinas claras, listas de verificación (checklists) y seguimiento en gestión del tiempo.";
+      } else {
+        perfilAprendizaje = "Necesidad de Acompañamiento Intensivo";
+        descAprendizaje = "Requiere más tiempo, repeticiones y explicaciones adaptadas para procesar los contenidos, junto a un seguimiento cercano para mantener el ritmo de trabajo.";
+        enfoqueAprendizaje = "Explicaciones fraccionadas paso a paso, material de apoyo visual/práctico y tutoría personalizada.";
+      }
+
+      /* 3. Determinación de la Orientación Académica (Preguntas 7 a 10) */
+      let siLetras = (q7 === 'SI' ? 1 : 0) + (q9 === 'SI' ? 1 : 0);
+      let siNumeros = (q8 === 'SI' ? 1 : 0) + (q10 === 'SI' ? 1 : 0);
+
+      let orientacionAcademica = "";
+      let descOrientacion = "";
+
+      if (siLetras > siNumeros) {
+        orientacionAcademica = "Perfil Letras";
+        descOrientacion = "Preferencia por lenguaje, análisis verbal, lectura, memorización teórica y redacción.";
+      } else if (siNumeros > siLetras) {
+        orientacionAcademica = "Perfil Números";
+        descOrientacion = "Preferencia por razonamiento cuantitativo, cálculo, lógica matemática y resolución de problemas exactos.";
+      } else {
+        orientacionAcademica = "Perfil Mixto";
+        descOrientacion = "Equilibrio de interés y habilidad entre el área verbal y la cuantitativa.";
+      }
+
+      /* Resultado Final Combinado */
+      const resultadoFinalTag = `${perfilAprendizaje} – ${orientacionAcademica}`;
+
+      /* Renderizado en la Ventana Emergente */
+      document.getElementById('res-tag').innerText = resultadoFinalTag;
+      document.getElementById('res-ia-val').innerText = `IA: ${ia}/3 (${isIaAlto ? 'Alto' : 'Bajo'})`;
+      document.getElementById('res-ir-val').innerText = `IR: ${ir}/2.5 (${isIrRapido ? 'Rápido/Moderado' : 'Pausado'})`;
+      
+      document.getElementById('res-learning-title').innerText = perfilAprendizaje;
+      document.getElementById('res-learning-desc').innerText = descAprendizaje;
+      document.getElementById('res-learning-approach').innerText = enfoqueAprendizaje;
+      
+      document.getElementById('res-orientation-title').innerText = orientacionAcademica;
+      document.getElementById('res-orientation-desc').innerText = descOrientacion;
+
+      document.getElementById('survey-form').style.display = 'none';
+      document.getElementById('survey-result').style.display = 'block';
+    }
+
+    function resetSurvey() {
+      document.getElementById('survey-form').reset();
+      document.getElementById('survey-form').style.display = 'block';
+      document.getElementById('survey-result').style.display = 'none';
+    }
+  </script>
+</body>
+</html>
